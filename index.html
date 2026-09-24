@@ -46,7 +46,9 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html, body { max-width: 100%; overflow-x: hidden; }
+        /* 横にはみ出しても切り落とす。overflow-x:hidden と違い clip は
+           スクロール領域を作らないので、曜日見出しの position:sticky が生きる */
+        html, body { max-width: 100%; overflow-x: clip; }
 
         body {
             background-color: var(--paper-bg);
@@ -121,8 +123,17 @@
             white-space: nowrap;
         }
 
-        /* ── 月ナビ ── */
-        .monthbar { display: flex; align-items: center; gap: 7px; margin: 9px 0 6px; }
+        /* ── 月ナビ＋曜日（スクロールしても上に残す） ── */
+        .sticky-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--paper-bg);
+            background-image: var(--noise);
+            padding-top: 1px;
+        }
+
+        .monthbar { display: flex; align-items: center; gap: 7px; margin: 8px 0 5px; }
 
         .month-label {
             font-family: 'Shippori Mincho', serif;
@@ -151,16 +162,20 @@
         .cal {
             background: var(--paper-card);
             border: 1px solid var(--line);
-            border-radius: 6px;
+            border-top: 0;
+            border-radius: 0 0 6px 6px;
             box-shadow: var(--shadow);
             overflow: hidden;
         }
 
+        /* 曜日の見出し。カレンダー本体と左右の枠をそろえて列を一致させる */
         .cal-dow {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             background: var(--paper-note);
-            border-bottom: 1px solid var(--line);
+            border: 1px solid var(--line);
+            border-bottom: 1px solid var(--line-strong);
+            border-radius: 6px 6px 0 0;
         }
 
         .cal-dow span {
@@ -184,10 +199,9 @@
         .cell {
             background: var(--paper-card);
             min-width: 0;
-            min-height: 50px;
+            min-height: 46px;
             padding: 3px 1px 4px;
             position: relative;
-            overflow: hidden;
             cursor: pointer;
         }
 
@@ -226,47 +240,49 @@
 
         .cell.is-today.is-holiday .d { box-shadow: none; color: var(--paper-card); }
 
-        .cb { display: flex; flex-direction: column; gap: 1px; align-items: center; }
+        /* ── 枡の中身（前半・後半・不在を名字のまま並べる） ──
+           文字の大きさは画面幅に比例させ、狭い端末では自動で小さくする。
+           入りきらない名前は折り返すので、横にはみ出すことはない。            */
+        .cb { font-size: clamp(7px, 2.25vw, 12px); line-height: 1.45; }
 
-        /* 枡から絶対にはみ出さないよう、入りきらない分は折り返す */
-        .cr {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1px;
+        .cr { display: flex; align-items: flex-start; gap: 1px; margin-top: 1px; }
+
+        .crl {
+            flex: none;
+            width: 1em;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: .85em;
+            color: var(--ink-muted);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .names { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; flex: 1; }
+
+        .nm {
+            padding: 0 1px;
+            border-radius: 2px;
+            white-space: nowrap;
+            overflow-wrap: anywhere;
             max-width: 100%;
         }
 
-        .crl {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 8px;
-            color: var(--ink-muted);
-            flex: none;
-            margin-right: 1px;
-        }
+        .nm.second { font-weight: 700; }
 
-        .ini {
-            display: inline-block;
-            width: 13px;
-            height: 13px;
-            line-height: 11px;
-            text-align: center;
-            font-size: 9.5px;
-            font-weight: 700;
-            border: 1px solid;
-            border-radius: 2px;
-            flex: none;
+        .nm.absent {
+            background: transparent !important;
+            color: var(--ink-muted) !important;
+            text-decoration: line-through;
+            text-decoration-thickness: 1px;
         }
-
-        .ini.out { background: transparent !important; border-style: dotted; }
 
         .flat {
-            font-size: 9px;
+            font-size: clamp(7px, 2.25vw, 12px);
             color: var(--ink-muted);
-            letter-spacing: .04em;
+            letter-spacing: .02em;
             line-height: 1.5;
             padding-top: 3px;
+            text-align: center;
         }
 
         .nt {
@@ -476,19 +492,11 @@
 
         [hidden] { display: none !important; }
 
-        /* 画面が狭いときは枡の中身を一段小さく */
-        @media (max-width: 384px) {
-            .wrap { padding: 0 5px; }
-            .ini { width: 12px; height: 12px; line-height: 10px; font-size: 9px; }
-            .crl { font-size: 7.5px; margin-right: 0; }
+        /* 画面が狭いときは、枡の余白をさらに削って名前の場所を確保する */
+        @media (max-width: 380px) {
+            .wrap { padding: 0 4px; }
             .cell { padding: 3px 0 4px; }
-        }
-
-        /* 画面が広いときは少しゆったりと */
-        @media (min-width: 430px) {
-            .cell { min-height: 58px; }
-            .ini { width: 15px; height: 15px; line-height: 13px; font-size: 10.5px; }
-            .crl { font-size: 9px; }
+            .crl { width: .9em; }
         }
     </style>
 </head>
@@ -510,19 +518,21 @@
     </header>
 
     <main class="wrap">
-        <div class="monthbar">
-            <button class="icon-btn" id="btn-prev" type="button" aria-label="前の月">‹</button>
-            <div class="month-label" id="month-label">—</div>
-            <button class="icon-btn" id="btn-next" type="button" aria-label="次の月">›</button>
-            <button class="btn-today" id="btn-today" type="button">今日</button>
+        <div class="sticky-bar">
+            <div class="monthbar">
+                <button class="icon-btn" id="btn-prev" type="button" aria-label="前の月">‹</button>
+                <div class="month-label" id="month-label">—</div>
+                <button class="icon-btn" id="btn-next" type="button" aria-label="次の月">›</button>
+                <button class="btn-today" id="btn-today" type="button">今日</button>
+            </div>
+            <div class="cal-dow" id="cal-dow"></div>
         </div>
 
         <section class="cal">
-            <div class="cal-dow" id="cal-dow"></div>
             <div class="cal-grid" id="cal-grid"></div>
         </section>
 
-        <p class="hint mono">後=後半 ／ 不=不在 ／ その他は前半　・　日付をタップで詳細</p>
+        <p class="hint mono">前=前半 ／ 後=後半 ／ <span style="text-decoration:line-through">不=不在</span>　・　日付をタップで詳細</p>
 
         <section class="detail" id="detail"></section>
 
@@ -602,11 +612,7 @@
                     var name = normalizeName(raw);
                     if (!name || seen[name]) return;
                     seen[name] = true;
-                    list.push({
-                        id: name, name: name,
-                        initial: name.charAt(0),          // カレンダーの枡には1文字だけ入れる
-                        style: STAFF_STYLES[list.length % STAFF_STYLES.length]
-                    });
+                    list.push({ id: name, name: name, style: STAFF_STYLES[list.length % STAFF_STYLES.length] });
                 });
                 return list;
             }
@@ -744,17 +750,17 @@
                 }).join('');
             }
 
-            // 枡の中の一行（「後 小」「不 横谷」）。3人を超えたら +n でまとめる
-            function cellRow(label, names, outline) {
+            // 枡の中の一行（「前 小原 竹中 …」）。名字は省略せず、入りきらない分は折り返す
+            function cellRow(label, names, kind) {
                 if (!names.length) return '';
-                var shown = names.slice(0, 3);
-                var rest = names.length - shown.length;
-                var chips = shown.map(function (s) {
-                    return '<span class="ini' + (outline ? ' out' : '') + '" style="background:' + s.style.bg +
-                        ';border-color:' + s.style.border + ';color:' + s.style.text + '">' + esc(s.initial) + '</span>';
+                var chips = names.map(function (s) {
+                    var style;
+                    if (kind === 'second') style = 'background:' + s.style.text + ';color:#fcfaf6';      // 後半は濃く
+                    else if (kind === 'absent') style = '';                                             // 不在は取り消し線
+                    else style = 'background:' + s.style.bg + ';color:' + s.style.text;                 // 前半は薄く
+                    return '<span class="nm ' + kind + '" style="' + style + '">' + esc(s.name) + '</span>';
                 }).join('');
-                if (rest > 0) chips += '<span class="crl">+' + rest + '</span>';
-                return '<div class="cr"><span class="crl">' + label + '</span>' + chips + '</div>';
+                return '<div class="cr"><span class="crl">' + label + '</span><span class="names">' + chips + '</span></div>';
             }
 
             function renderGrid() {
@@ -791,10 +797,11 @@
                     if (closed) {
                         body = '<div class="flat">閉塾</div>';
                     } else if (!groups.first.length && !groups.second.length) {
-                        body = '<div class="flat">担当なし</div>';   // 土曜など、全員が不在の日
+                        body = '<div class="flat">全員不在</div>';   // 土曜など、担当者がいない日
                     } else {
-                        body = cellRow('後', groups.second, false) + cellRow('不', groups.absent, true);
-                        if (!body) body = '<div class="flat">—</div>';
+                        body = cellRow('前', groups.first, 'first') +
+                            cellRow('後', groups.second, 'second') +
+                            cellRow('不', groups.absent, 'absent');
                     }
 
                     html += '<div class="' + cls + '" data-key="' + key + '">' +
@@ -1028,6 +1035,12 @@
                     state.selected = key;
                     renderGrid();
                     renderDetail();
+                    // 月の下のほうをタップしたときでも、詳細が画面に入るようにする
+                    try {
+                        document.getElementById('detail').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    } catch (e) {
+                        document.getElementById('detail').scrollIntoView(false);
+                    }
                 });
 
                 try {
