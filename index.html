@@ -263,10 +263,11 @@
 
         /* 曜日・祝日・長期休みの色分け（教員カレンダーと同じ配色）。
            あとに書いたものが優先される：日曜 < 土曜 < 祝日 < 長期休み        */
-        .cell.is-sun { background-color: rgba(224, 69, 42, .08); }
-        .cell.is-sat { background-color: rgba(26, 122, 229, .09); }
+        /* 半透明だと紙の生成り色と混ざってくすむので、土日と長期休みは不透明の明るい色にする */
+        .cell.is-sun { background-color: #ffedeb; }
+        .cell.is-sat { background-color: #e8f2ff; }
         .cell.is-holiday { background-color: rgba(224, 69, 42, .17); }
-        .cell.is-vacation { background-color: rgba(31, 157, 85, .17); }
+        .cell.is-vacation { background-color: #e4f8e9; }
 
         /* 閉塾は斜めストライプ。background-image だけを重ねるので、
            上の色（日曜の赤など）はそのまま透けて見える                     */
