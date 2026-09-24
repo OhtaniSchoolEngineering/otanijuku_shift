@@ -266,10 +266,21 @@
         /* 曜日・祝日・長期休みの色分け（教員カレンダーと同じ配色）。
            あとに書いたものが優先される：日曜 < 土曜 < 祝日 < 長期休み        */
         /* 半透明だと紙の生成り色と混ざってくすむので、土日と長期休みは不透明の明るい色にする */
-        .cell.is-sun { background-color: #ffedeb; }
-        .cell.is-sat { background-color: #e8f2ff; }
-        .cell.is-holiday { background-color: #ffedeb; }
-        .cell.is-vacation { background-color: #e4f8e9; }
+        .cell.is-sun {
+            background-color: #ffedeb;
+        }
+
+        .cell.is-sat {
+            background-color: #e8f2ff;
+        }
+
+        .cell.is-holiday {
+            background-color: #ffedeb;
+        }
+
+        .cell.is-vacation {
+            background-color: #e4f8e9;
+        }
 
         /* 閉塾は斜めストライプ。background-image だけを重ねるので、
            上の色（日曜の赤など）はそのまま透けて見える                     */
@@ -348,7 +359,7 @@
         }
 
         /* 前半・後半・不在のあいだに区切り線を入れる */
-        .cr + .cr {
+        .cr+.cr {
             margin-top: 2px;
             padding-top: 2px;
             border-top: 1px dotted var(--line-strong);
@@ -687,7 +698,7 @@
         <div class="wrap head-row">
             <div class="logo">塾</div>
             <div>
-                <div class="head-title">大谷塾 シフト</div>
+                <div class="head-title">大谷塾 シフト確認＜閲覧のみ＞</div>
                 <div class="head-sub mono" id="head-sub">OTANI JUKU</div>
             </div>
             <div class="head-right">
