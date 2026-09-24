@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>大谷塾 シフト</title>
+    <meta name="description" content="大谷塾の担当シフトを確認する教員用の簡易ビューアです。">
+
+    <!-- PWA（ホーム画面に追加してアプリとして起動する） -->
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#2c2926">
+    <link rel="icon" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="塾シフト">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Shippori+Mincho:wght@600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            color-scheme: light;
+            --paper-bg: #f2ede4;
+            --paper-card: #fcfaf6;
+            --paper-note: #f7f2e7;
+            --ink: #2c2926;
+            --ink-soft: #4f4a43;
+            --ink-muted: #6e6962;
+            --ink-blue: #2a4365;
+            --stamp: #c84332;
+            --line: #e3dcce;
+            --line-strong: #d3c9b7;
+            --shadow: 2px 3px 8px rgba(60, 50, 40, .08), 0 1px 2px rgba(60, 50, 40, .04);
+            --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--paper-bg);
+            background-image: var(--noise),
+                linear-gradient(to right, rgba(190, 178, 158, .2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(190, 178, 158, .2) 1px, transparent 1px);
+            background-size: auto, 22px 22px, 22px 22px;
+            color: var(--ink);
+            font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            font-feature-settings: "palt" 1;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .mincho { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif; }
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+
+        .wrap { max-width: 560px; margin: 0 auto; padding: 0 12px; }
+
+        /* ── ヘッダー ── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(242, 237, 228, .93);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--line);
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .head-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .logo {
+            width: 34px;
+            height: 34px;
+            flex: none;
+            border-radius: 5px;
+            background: var(--ink);
+            color: var(--paper-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 800;
+            font-size: 17px;
+            line-height: 1;
+        }
+
+        .head-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+
+        .head-sub {
+            font-size: 10px;
+            letter-spacing: .16em;
+            color: var(--ink-muted);
+            margin-top: 1px;
+        }
+
+        .head-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--line-strong);
+            background: var(--paper-card);
+            border-radius: 5px;
+            color: var(--ink-soft);
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:active { background: var(--paper-note); }
+
+        .badge-view {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .12em;
+            color: var(--ink-muted);
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 2px 6px;
+            background: var(--paper-note);
+            white-space: nowrap;
+        }
+
+        /* ── 今日のカード ── */
+        .today {
+            position: relative;
+            margin-top: 14px;
+            background: var(--paper-card);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--stamp);
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            padding: 14px 15px 15px;
+            overflow: hidden;
+        }
+
+        .today.is-closed { border-left-color: var(--line-strong); background: var(--paper-note); }
+
+        .today-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+
+        .today-date {
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 800;
+            font-size: 25px;
+            line-height: 1.1;
+        }
+
+        .tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .12em;
+            padding: 2px 7px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .tag-open { background: var(--ink); color: var(--paper-card); }
+        .tag-closed { background: var(--line-strong); color: var(--ink-soft); }
+        .tag-holiday { background: rgba(200, 67, 50, .14); color: var(--stamp); border: 1px solid rgba(200, 67, 50, .4); }
+
+        .rule { border-top: 1px dashed var(--line-strong); margin: 12px 0 11px; }
+
+        /* ── 担当者のバッジ ── */
+        .grp { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 8px; }
+        .grp:last-child { margin-bottom: 0; }
+
+        .grp-label {
+            flex: none;
+            width: 34px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .06em;
+            color: var(--ink-muted);
+            padding-top: 4px;
+        }
+
+        .grp-names { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+
+        .chip {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 3px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        .chip-sm { font-size: 11px; padding: 2px 7px; }
+
+        .none { font-size: 12px; color: var(--ink-muted); padding-top: 3px; }
+
+        .note {
+            margin-top: 11px;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--ink-soft);
+            background: var(--paper-note);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 8px 10px;
+        }
+
+        .note-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .14em;
+            color: var(--ink-muted);
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* ── 月ナビ ── */
+        .monthbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 18px 0 8px;
+        }
+
+        .month-label {
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 700;
+            font-size: 17px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-today {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .1em;
+            border: 1px solid var(--line-strong);
+            background: var(--paper-card);
+            border-radius: 4px;
+            padding: 7px 9px;
+            color: var(--ink-soft);
+            cursor: pointer;
+        }
+
+        /* ── 日別リスト ── */
+        .list {
+            background: var(--paper-card);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            padding: 9px 12px 9px 11px;
+            border-top: 1px solid var(--line);
+            border-left: 3px solid transparent;
+        }
+
+        .row:first-child, .row-more + .row { border-top: 0; }
+        .row.is-past { opacity: .45; }
+        .row.is-today { border-left-color: var(--stamp); background: var(--paper-note); opacity: 1; }
+        .row.is-closed { background: repeating-linear-gradient(135deg, transparent, transparent 6px, rgba(190, 178, 158, .1) 6px, rgba(190, 178, 158, .1) 12px); }
+        .row.is-sun .row-dow { color: var(--stamp); }
+        .row.is-sat .row-dow { color: var(--ink-blue); }
+
+        .row-date { flex: none; width: 40px; text-align: center; padding-top: 1px; }
+
+        .row-day {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 1.1;
+        }
+
+        .row-dow { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+
+        .row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+        .row-line { display: flex; align-items: flex-start; gap: 7px; }
+
+        .row-label {
+            flex: none;
+            width: 26px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--ink-muted);
+            padding-top: 3px;
+        }
+
+        .row-note {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 11.5px;
+            color: var(--ink-soft);
+            line-height: 1.5;
+            padding-left: 33px;
+        }
+
+        .row-more {
+            display: block;
+            width: 100%;
+            border: 0;
+            border-bottom: 1px solid var(--line);
+            background: var(--paper-note);
+            color: var(--ink-muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .06em;
+            padding: 10px 12px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .row-more:active { background: var(--line); }
+
+        .row-closed {
+            font-size: 12px;
+            color: var(--ink-muted);
+            padding-top: 4px;
+            letter-spacing: .1em;
+        }
+
+        .footnote {
+            margin-top: 14px;
+            font-size: 11px;
+            line-height: 1.7;
+            color: var(--ink-muted);
+            text-align: center;
+        }
+
+        /* ── ログイン／状態表示 ── */
+        .gate {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: var(--paper-bg);
+            background-image: var(--noise);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .gate-card {
+            width: 100%;
+            max-width: 340px;
+            background: var(--paper-card);
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            padding: 30px 24px;
+            text-align: center;
+            box-shadow: 4px 8px 22px rgba(60, 50, 40, .14);
+        }
+
+        .gate-logo {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 14px;
+            border-radius: 6px;
+            background: var(--ink);
+            color: var(--paper-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 800;
+            font-size: 24px;
+        }
+
+        .gate-kicker {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .3em;
+            color: var(--ink-muted);
+            margin-bottom: 6px;
+        }
+
+        .gate-title {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .gate-text { font-size: 12.5px; line-height: 1.8; color: var(--ink-muted); }
+
+        .btn {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: var(--ink-blue); color: #fbf8f1; border-color: #1d3049; }
+        .btn-sub { background: var(--paper-note); color: var(--ink-soft); border-color: var(--line-strong); }
+
+        .gate-error {
+            color: var(--stamp);
+            font-weight: 700;
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border: 4px solid var(--line);
+            border-top-color: var(--ink-blue);
+            border-radius: 50%;
+            margin: 6px auto 14px;
+            animation: spin .9s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        [hidden] { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="wrap head-row">
+            <div class="logo">塾</div>
+            <div>
+                <div class="head-title">大谷塾 シフト</div>
+                <div class="head-sub mono" id="head-sub">OTANI JUKU</div>
+            </div>
+            <div class="head-right">
+                <span class="badge-view" id="stale-badge" hidden>保存分</span>
+                <button class="icon-btn" id="btn-reload" type="button" aria-label="再読み込み">↻</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="today" id="today-card"></section>
+
+        <div class="monthbar">
+            <button class="icon-btn" id="btn-prev" type="button" aria-label="前の月">‹</button>
+            <div class="month-label" id="month-label">—</div>
+            <button class="icon-btn" id="btn-next" type="button" aria-label="次の月">›</button>
+            <button class="btn-today" id="btn-today" type="button">今日</button>
+        </div>
+
+        <section class="list" id="day-list"></section>
+
+        <p class="footnote" id="footnote"></p>
+    </main>
+
+    <div class="gate" id="gate"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // 大谷塾アプリ（otanijuku_app/firebase_common.html）と同じプロジェクト設定
+            var FIREBASE_CONFIG = {
+                apiKey: "AIzaSyAJ94o33L-3pH-OGEZyy7VuEbqaiPSvIOE",
+                authDomain: "otanijuku-app.firebaseapp.com",
+                databaseURL: "https://otanijuku-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "otanijuku-app",
+                storageBucket: "otanijuku-app.firebasestorage.app",
+                messagingSenderId: "1041042279061",
+                appId: "1:1041042279061:web:5d841703c72fbfcbe1299c"
+            };
+
+            // ═══════════════════════════════════════════════════════
+            //  シフトの決まりごと
+            //  （otanijuku_app/calendar_common.html の PaperCal と同じ内容。
+            //    向こうを直したときは、こちらも合わせて直してください）
+            // ═══════════════════════════════════════════════════════
+            var WEEK_JP = ['日', '月', '火', '水', '木', '金', '土'];
+            var PERIODS = [
+                { key: 'first', label: '前半' },
+                { key: 'second', label: '後半' },
+                { key: 'absent', label: '不在' }
+            ];
+            var STAFF_STYLES = [
+                { bg: 'rgba(26,122,229,0.16)', border: 'rgba(26,122,229,0.55)', text: '#0f4c8f' },
+                { bg: 'rgba(31,157,85,0.18)', border: 'rgba(31,157,85,0.55)', text: '#146b3a' },
+                { bg: 'rgba(224,69,42,0.14)', border: 'rgba(224,69,42,0.5)', text: '#9c2c19' },
+                { bg: 'rgba(139,63,214,0.15)', border: 'rgba(139,63,214,0.5)', text: '#5b2a92' },
+                { bg: 'rgba(192,130,0,0.18)', border: 'rgba(192,130,0,0.55)', text: '#7a5200' },
+                { bg: 'rgba(13,143,160,0.16)', border: 'rgba(13,143,160,0.55)', text: '#0a5f6b' }
+            ];
+            var DEFAULT_ROSTER = ['小原', '竹中', '横溝', '山田', '谷山', '橋本'];
+            var DEFAULT_BY_WEEKDAY = {
+                1: { second: '小原', absent: '谷山' },
+                2: { second: '竹中', absent: '小原' },
+                3: { second: '横溝', absent: '竹中' },
+                4: { second: '橋本', absent: '横溝' },
+                5: { second: '谷山', absent: '橋本' }
+            };
+            var DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+            function pad2(n) { return (n < 10 ? '0' : '') + n; }
+            function dateKey(d) { d = new Date(d); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+            function parseDateKey(k) { var p = String(k).split('-'); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])); }
+            function encodeEmailKey(email) { return String(email || '').trim().toLowerCase().replace(/\./g, ','); }
+
+            function esc(v) {
+                return String(v == null ? '' : v)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function normalizeName(name) {
+                return String(name || '').replace(/[\s　]/g, '').replace(/[.$#\[\]\/]/g, '').replace(/(先生|さん|講師)$/, '');
+            }
+
+            function staffList(settings) {
+                var s = settings || {};
+                var roster = (s.calendarStaff && s.calendarStaff.length) ? [].concat(s.calendarStaff) : DEFAULT_ROSTER;
+                var seen = {}, list = [];
+                roster.forEach(function (raw) {
+                    var name = normalizeName(raw);
+                    if (!name || seen[name]) return;
+                    seen[name] = true;
+                    list.push({ id: name, name: name, style: STAFF_STYLES[list.length % STAFF_STYLES.length] });
+                });
+                return list;
+            }
+
+            // 旧仕様（担当者IDをキーに保存）のデータを担当者名のキーに読み替える
+            function savedStaffs(saved, members) {
+                var m = members || {};
+                var src = (saved && saved.staffs) || {};
+                var out = {};
+                Object.keys(src).forEach(function (key) {
+                    var name = key;
+                    if (/^99000[1-6]$/.test(key) && m[key] && m[key].name) name = normalizeName(m[key].name);
+                    if (out[name] === undefined || key === name) out[name] = src[key];
+                });
+                return out;
+            }
+
+            // 保存されていない日は、曜日ごとの既定シフトを表示する
+            function defaultShift(list, dateObj) {
+                var out = {};
+                var row = DEFAULT_BY_WEEKDAY[dateObj.getDay()];
+                list.forEach(function (s) {
+                    if (!row) { out[s.id] = 'absent'; return; }   // 土日は全員不在
+                    out[s.id] = (s.name === normalizeName(row.second)) ? 'second'
+                        : ((s.name === normalizeName(row.absent)) ? 'absent' : 'first');
+                });
+                return out;
+            }
+
+            function dayData(shifts, members, key, dateObj, list) {
+                var saved = (shifts || {})[key] || {};
+                var current = savedStaffs(saved, members);
+                var defaults = defaultShift(list, dateObj);
+                var staffs = {};
+                list.forEach(function (s) { staffs[s.id] = current[s.id] || defaults[s.id]; });
+                return { staffs: staffs, note: saved.note || '', dayType: saved.dayType || 'normal' };
+            }
+
+            // 開塾カレンダー（settings/closedWeekdays・closedDays・openDays）
+            function normalizeSchedule(settings) {
+                settings = settings || {};
+                var raw = settings.closedWeekdays;
+                var weekdays = {};
+                var hasWeekdaySetting = raw && typeof raw === 'object' && Object.keys(raw).length > 0;
+                if (hasWeekdaySetting) {
+                    Object.keys(raw).forEach(function (k) { if (raw[k]) weekdays[String(Number(k))] = true; });
+                } else {
+                    weekdays['0'] = true;   // 既定：日曜は閉塾
+                }
+                var pick = function (v) {
+                    var out = {};
+                    Object.keys(v || {}).forEach(function (k) { if (v[k] && DATE_KEY_RE.test(k)) out[k] = true; });
+                    return out;
+                };
+                return {
+                    closedWeekdays: weekdays,
+                    closedDays: pick(settings.closedDays),
+                    openDays: pick(settings.openDays)
+                };
+            }
+
+            function isClosedDay(schedule, day) {
+                var key = (typeof day === 'string') ? day : dateKey(day);
+                if (schedule.openDays[key]) return false;
+                if (schedule.closedDays[key]) return true;
+                var d = (typeof day === 'string') ? parseDateKey(day) : new Date(day);
+                return !!schedule.closedWeekdays[String(d.getDay())];
+            }
+
+            // ═══════════════════════════════════════════════════════
+            //  状態
+            // ═══════════════════════════════════════════════════════
+            var CACHE_PREFIX = 'otani.shift.v1.';
+            var now = new Date();
+            var state = {
+                year: now.getFullYear(),
+                month: now.getMonth() + 1,
+                shifts: {},          // 表示中の月ぶん
+                todayShift: null,    // 今日ぶん（月を移動しても保つ）
+                settings: null,
+                staffMembers: {},    // 990001〜990006（旧IDキーの読み替え用）
+                member: null,
+                showPast: false,     // 今月の、今日より前の日も並べるか
+                stale: false,        // 端末に保存した内容を表示中か
+                loading: false
+            };
+
+            var auth = null, db = null;
+
+            // ── 端末への保存（通信前でもすぐ出せるように） ──
+            function cacheKey(y, m) { return CACHE_PREFIX + y + '-' + pad2(m); }
+
+            function saveCache() {
+                try {
+                    localStorage.setItem(cacheKey(state.year, state.month), JSON.stringify({
+                        shifts: state.shifts,
+                        settings: state.settings,
+                        staffMembers: state.staffMembers,
+                        todayShift: state.todayShift,
+                        todayKey: dateKey(new Date()),
+                        ts: Date.now()
+                    }));
+                } catch (e) { /* 容量超過などは無視してよい */ }
+            }
+
+            function loadCache(y, m) {
+                try {
+                    var raw = localStorage.getItem(cacheKey(y, m));
+                    return raw ? JSON.parse(raw) : null;
+                } catch (e) { return null; }
+            }
+
+            // ═══════════════════════════════════════════════════════
+            //  描画
+            // ═══════════════════════════════════════════════════════
+            function chipHtml(staff, small) {
+                return '<span class="chip' + (small ? ' chip-sm' : '') + '" style="background:' + staff.style.bg +
+                    ';border-color:' + staff.style.border + ';color:' + staff.style.text + '">' + esc(staff.name) + '</span>';
+            }
+
+            function groupByPeriod(list, staffs) {
+                var groups = { first: [], second: [], absent: [] };
+                list.forEach(function (s) {
+                    var p = staffs[s.id];
+                    if (groups[p]) groups[p].push(s);
+                });
+                return groups;
+            }
+
+            function renderToday() {
+                var el = document.getElementById('today-card');
+                var list = staffList(state.settings);
+                var schedule = normalizeSchedule(state.settings);
+                var today = new Date();
+                var key = dateKey(today);
+                var shifts = {};
+                shifts[key] = state.todayShift || (state.shifts || {})[key] || null;
+                var data = dayData(shifts, state.staffMembers, key, today, list);
+                var closed = isClosedDay(schedule, key);
+                var groups = groupByPeriod(list, data.staffs);
+
+                var tag = closed
+                    ? '<span class="tag tag-closed mono">閉塾</span>'
+                    : '<span class="tag tag-open mono">開塾</span>';
+                if (data.dayType === 'holiday') tag += ' <span class="tag tag-holiday mono">休講</span>';
+                if (data.dayType === 'longVacation') tag += ' <span class="tag tag-holiday mono">長期休暇</span>';
+
+                var body = '';
+                if (closed) {
+                    body = '<p class="none">本日は閉塾日です。</p>';
+                } else {
+                    body = PERIODS.map(function (p) {
+                        var names = groups[p.key];
+                        return '<div class="grp"><div class="grp-label">' + p.label + '</div>' +
+                            (names.length
+                                ? '<div class="grp-names">' + names.map(function (s) { return chipHtml(s, false); }).join('') + '</div>'
+                                : '<div class="none">—</div>') +
+                            '</div>';
+                    }).join('');
+                }
+
+                var note = data.note
+                    ? '<div class="note"><span class="note-label mono">NOTE</span>' + esc(data.note) + '</div>'
+                    : '';
+
+                el.className = 'today' + (closed ? ' is-closed' : '');
+                el.innerHTML =
+                    '<div class="today-head">' +
+                    '<div class="today-date">' + (today.getMonth() + 1) + '月' + today.getDate() + '日' +
+                    '<span style="font-size:15px">（' + WEEK_JP[today.getDay()] + '）</span></div>' + tag +
+                    '</div><div class="rule"></div>' + body + note;
+            }
+
+            function renderMonth() {
+                var listEl = document.getElementById('day-list');
+                var list = staffList(state.settings);
+                var schedule = normalizeSchedule(state.settings);
+                var today = new Date(); today.setHours(0, 0, 0, 0);
+                var todayKey = dateKey(today);
+                var daysInMonth = new Date(state.year, state.month, 0).getDate();
+                var html = '';
+
+                document.getElementById('month-label').textContent = state.year + '年 ' + state.month + '月';
+
+                // 今月を開いたときは今日から並べる（過去は「今月の初めから」で開ける）
+                var isThisMonth = (state.year === today.getFullYear() && state.month === today.getMonth() + 1);
+                var startDay = 1;
+                if (isThisMonth && !state.showPast) {
+                    startDay = today.getDate();
+                    if (startDay > 1) {
+                        html += '<button class="row-more" id="btn-show-past" type="button">‹ 今月の初めから表示</button>';
+                    }
+                }
+
+                for (var d = startDay; d <= daysInMonth; d++) {
+                    var dateObj = new Date(state.year, state.month - 1, d);
+                    var key = dateKey(dateObj);
+                    var dow = dateObj.getDay();
+                    var data = dayData(state.shifts, state.staffMembers, key, dateObj, list);
+                    var closed = isClosedDay(schedule, key);
+                    var groups = groupByPeriod(list, data.staffs);
+
+                    var cls = 'row';
+                    if (key === todayKey) cls += ' is-today';
+                    else if (dateObj.getTime() < today.getTime()) cls += ' is-past';
+                    if (closed) cls += ' is-closed';
+                    if (dow === 0) cls += ' is-sun';
+                    if (dow === 6) cls += ' is-sat';
+
+                    var dayTag = '';
+                    if (data.dayType === 'holiday') dayTag = '<div><span class="tag tag-holiday mono">休講</span></div>';
+                    else if (data.dayType === 'longVacation') dayTag = '<div><span class="tag tag-holiday mono">長期休暇</span></div>';
+
+                    var body = dayTag;
+                    if (closed) {
+                        body += '<div class="row-closed">閉塾' +
+                            (data.note ? '　<span style="font-size:11px">' + esc(data.note) + '</span>' : '') + '</div>';
+                    } else {
+                        body += PERIODS.map(function (p) {
+                            var names = groups[p.key];
+                            if (!names.length) return '';
+                            return '<div class="row-line"><div class="row-label">' + p.label + '</div>' +
+                                '<div class="grp-names">' + names.map(function (s) { return chipHtml(s, true); }).join('') + '</div></div>';
+                        }).join('');
+                        if (data.note) body += '<div class="row-note">' + esc(data.note) + '</div>';
+                    }
+
+                    html += '<div class="' + cls + '">' +
+                        '<div class="row-date"><div class="row-day mono">' + d + '</div>' +
+                        '<div class="row-dow">' + WEEK_JP[dow] + '</div></div>' +
+                        '<div class="row-body">' + body + '</div></div>';
+                }
+
+                listEl.innerHTML = html;
+                var more = document.getElementById('btn-show-past');
+                if (more) more.addEventListener('click', function () { state.showPast = true; renderMonth(); });
+                document.getElementById('stale-badge').hidden = !state.stale;
+
+                var foot = state.stale
+                    ? 'この端末に保存した内容を表示しています。通信ができると自動で更新されます。'
+                    : '閲覧専用です。担当の変更は教員用ダッシュボードから行ってください。';
+                document.getElementById('footnote').textContent = foot;
+            }
+
+            function renderAll() { renderToday(); renderMonth(); }
+
+            // ═══════════════════════════════════════════════════════
+            //  読み込み
+            // ═══════════════════════════════════════════════════════
+            function fetchMonth() {
+                var from = state.year + '-' + pad2(state.month) + '-01';
+                var to = state.year + '-' + pad2(state.month) + '-31';
+                return db.ref('shifts').orderByKey().startAt(from).endAt(to).once('value')
+                    .then(function (snap) { state.shifts = snap.val() || {}; });
+            }
+
+            function fetchCommon() {
+                var jobs = [
+                    db.ref('settings').once('value').then(function (s) { state.settings = s.val() || {}; }),
+                    db.ref('shifts/' + dateKey(new Date())).once('value').then(function (s) { state.todayShift = s.val() || null; })
+                ];
+                // 旧仕様（担当者IDキー）のデータを名前に読み替えるための6名ぶん
+                ['990001', '990002', '990003', '990004', '990005', '990006'].forEach(function (id) {
+                    jobs.push(db.ref('members/' + id + '/name').once('value').then(function (s) {
+                        if (s.val()) state.staffMembers[id] = { name: s.val() };
+                    }).catch(function () { }));
+                });
+                return Promise.all(jobs);
+            }
+
+            function refresh(withCommon) {
+                if (state.loading) return Promise.resolve();
+                state.loading = true;
+                document.getElementById('btn-reload').textContent = '…';
+                var job = withCommon ? fetchCommon().then(fetchMonth) : fetchMonth();
+                return job.then(function () {
+                    state.stale = false;
+                    saveCache();
+                    renderAll();
+                }).catch(function (err) {
+                    // 通信できないときは、保存した内容のまま表示を続ける
+                    state.stale = true;
+                    renderAll();
+                    console.warn('読み込みに失敗しました', err);
+                }).then(function () {
+                    state.loading = false;
+                    document.getElementById('btn-reload').textContent = '↻';
+                });
+            }
+
+            function showMonth(y, m) {
+                state.year = y;
+                state.month = m;
+                state.showPast = false;
+                var cached = loadCache(y, m);
+                if (cached) {
+                    state.shifts = cached.shifts || {};
+                    if (!state.settings) state.settings = cached.settings || null;
+                    if (cached.staffMembers) state.staffMembers = cached.staffMembers;
+                    if (cached.todayShift !== undefined && cached.todayKey === dateKey(new Date())) {
+                        state.todayShift = cached.todayShift;
+                    }
+                    state.stale = true;
+                } else {
+                    state.shifts = {};
+                }
+                renderAll();
+                if (db && auth && auth.currentUser) refresh(false);
+            }
+
+            // ═══════════════════════════════════════════════════════
+            //  ログイン画面
+            // ═══════════════════════════════════════════════════════
+            function showGate(view) {
+                var gate = document.getElementById('gate');
+                gate.hidden = false;
+                var inner = '';
+                if (view.mode === 'loading') {
+                    inner = '<div class="spinner"></div><p class="gate-text">' + esc(view.message || '接続しています…') + '</p>';
+                } else if (view.mode === 'login') {
+                    inner = '<p class="gate-text">塾に登録したGoogleアカウントでログインしてください。<br>次回からは自動でログインします。</p>' +
+                        '<button class="btn btn-primary" id="btn-login" type="button">Googleでログイン</button>' +
+                        (view.error ? '<p class="gate-error">' + esc(view.error) + '</p>' : '');
+                } else if (view.mode === 'unregistered') {
+                    inner = '<p class="gate-text"><b>' + esc(view.email || '') + '</b><br>このアカウントは大谷塾のメンバーに登録されていません。</p>' +
+                        '<button class="btn btn-primary" id="btn-logout" type="button">別のアカウントでログイン</button>';
+                } else {
+                    inner = '<p class="gate-error">' + esc(view.message || 'エラーが発生しました。') + '</p>' +
+                        '<button class="btn btn-sub" id="btn-logout" type="button">ログインし直す</button>';
+                }
+
+                gate.innerHTML = '<div class="gate-card">' +
+                    '<div class="gate-logo">塾</div>' +
+                    '<p class="gate-kicker mono">OTANI JUKU</p>' +
+                    '<h1 class="gate-title">' + esc(view.title || '大谷塾 シフト') + '</h1>' +
+                    inner + '</div>';
+
+                var login = document.getElementById('btn-login');
+                if (login) login.addEventListener('click', signIn);
+                var logout = document.getElementById('btn-logout');
+                if (logout) logout.addEventListener('click', function () { auth.signOut(); });
+            }
+
+            function hideGate() { document.getElementById('gate').hidden = true; }
+
+            function signIn() {
+                var provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                showGate({ mode: 'loading', message: 'ログインしています…' });
+                auth.signInWithPopup(provider).catch(function (err) {
+                    var code = err && err.code;
+                    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+                        showGate({ mode: 'login' });
+                        return;
+                    }
+                    var msg = (err && err.message) || String(err);
+                    if (code === 'auth/unauthorized-domain') {
+                        msg = 'このドメインはFirebaseに許可されていません。Firebase Console の Authentication →設定→承認済みドメイン に、このサイトのドメインを追加してください。';
+                    }
+                    showGate({ mode: 'login', error: msg });
+                });
+            }
+
+            function onSignedIn(user) {
+                showGate({ mode: 'loading', message: 'メンバー情報を確認しています…' });
+                db.ref('emailIndex/' + encodeEmailKey(user.email)).once('value').then(function (snap) {
+                    var id = snap.val();
+                    if (!id) { showGate({ mode: 'unregistered', title: '未登録のアカウント', email: user.email }); return null; }
+                    return db.ref('members/' + id).once('value').then(function (m) {
+                        var raw = m.val() || {};
+                        state.member = { id: id, name: raw.name || '', role: raw.role === 'teacher' ? 'teacher' : 'student' };
+                        document.getElementById('head-sub').textContent = state.member.name || user.email;
+                        hideGate();
+                        return refresh(true);
+                    });
+                }).catch(function (err) {
+                    showGate({ mode: 'error', title: '読み込めませんでした', message: (err && err.message) || String(err) });
+                });
+            }
+
+            // ═══════════════════════════════════════════════════════
+            //  起動
+            // ═══════════════════════════════════════════════════════
+            function boot() {
+                // 通信を待たずに、保存してある内容をまず表示する
+                showMonth(state.year, state.month);
+
+                document.getElementById('btn-prev').addEventListener('click', function () {
+                    var m = state.month - 1, y = state.year;
+                    if (m < 1) { m = 12; y--; }
+                    showMonth(y, m);
+                });
+                document.getElementById('btn-next').addEventListener('click', function () {
+                    var m = state.month + 1, y = state.year;
+                    if (m > 12) { m = 1; y++; }
+                    showMonth(y, m);
+                });
+                document.getElementById('btn-today').addEventListener('click', function () {
+                    var t = new Date();
+                    showMonth(t.getFullYear(), t.getMonth() + 1);
+                });
+                document.getElementById('btn-reload').addEventListener('click', function () { refresh(true); });
+
+                try {
+                    firebase.initializeApp(FIREBASE_CONFIG);
+                    auth = firebase.auth();
+                    db = firebase.database();
+                } catch (e) {
+                    showGate({ mode: 'error', title: '設定エラー', message: e.message });
+                    return;
+                }
+
+                showGate({ mode: 'loading' });
+
+                // ログイン状態をこの端末に保存する（次回から自動ログイン）
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () { })
+                    .then(function () {
+                        auth.onAuthStateChanged(function (user) {
+                            if (user) onSignedIn(user);
+                            else showGate({ mode: 'login' });
+                        });
+                    });
+
+                // 画面に戻ってきたときは黙って最新に更新する
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden && auth && auth.currentUser) refresh(false);
+                });
+
+                window.addEventListener('load', function () {
+                    try {
+                        if (navigator.serviceWorker) navigator.serviceWorker.register('./sw.js').catch(function () { });
+                    } catch (e) { /* 使えない環境では何もしない */ }
+                });
+            }
+
+            boot();
+        })();
+    </script>
+</body>
+
+</html>
