@@ -261,13 +261,25 @@
             opacity: .4;
         }
 
+        /* 曜日・祝日・長期休みの色分け（教員カレンダーと同じ配色）。
+           あとに書いたものが優先される：日曜 < 土曜 < 祝日 < 長期休み        */
+        .cell.is-sun { background-color: rgba(224, 69, 42, .08); }
+        .cell.is-sat { background-color: rgba(26, 122, 229, .09); }
+        .cell.is-holiday { background-color: rgba(224, 69, 42, .17); }
+        .cell.is-vacation { background-color: rgba(31, 157, 85, .17); }
+
+        /* 閉塾は斜めストライプ。background-image だけを重ねるので、
+           上の色（日曜の赤など）はそのまま透けて見える                     */
         .cell.is-closed {
-            background: repeating-linear-gradient(135deg, var(--paper-card), var(--paper-card) 5px, rgba(190, 178, 158, .17) 5px, rgba(190, 178, 158, .17) 10px);
+            background-image: repeating-linear-gradient(45deg,
+                    rgba(164, 155, 140, .18),
+                    rgba(164, 155, 140, .18) 6px,
+                    rgba(164, 155, 140, .04) 6px,
+                    rgba(164, 155, 140, .04) 12px);
         }
 
         .cell.is-sel {
             box-shadow: inset 0 0 0 2px var(--ink-blue);
-            background-color: #f4f7fb;
         }
 
         .d {
@@ -283,7 +295,8 @@
             border-radius: 8px;
         }
 
-        .cell.is-sun .d {
+        .cell.is-sun .d,
+        .cell.is-holiday .d {
             color: var(--stamp);
         }
 
@@ -291,19 +304,13 @@
             color: var(--ink-blue);
         }
 
+        .cell.is-vacation .d {
+            color: #2a5338;
+        }
+
+        /* 今日はどの日より優先して朱の丸にする（この順番でないと負ける） */
         .cell.is-today .d {
             background: var(--stamp);
-            color: var(--paper-card);
-        }
-
-        /* 休講・長期休暇は日付を朱の丸で囲う */
-        .cell.is-holiday .d {
-            box-shadow: inset 0 0 0 1px var(--stamp);
-            color: var(--stamp);
-        }
-
-        .cell.is-today.is-holiday .d {
-            box-shadow: none;
             color: var(--paper-card);
         }
 
@@ -320,6 +327,13 @@
             align-items: flex-start;
             gap: 1px;
             margin-top: 1px;
+        }
+
+        /* 前半・後半・不在のあいだに区切り線を入れる */
+        .cr + .cr {
+            margin-top: 2px;
+            padding-top: 2px;
+            border-top: 1px dotted var(--line-strong);
         }
 
         .crl {
@@ -352,9 +366,8 @@
             font-weight: 700;
         }
 
-        /* 不在は下地なしの黒い太字（前半・後半は下地があるので見分けられる） */
+        /* 不在は担当者の色の下地＋黒い太字（前半は同じ色の文字、後半は濃い下地に白文字） */
         .nm.absent {
-            background: transparent !important;
             color: var(--ink) !important;
             font-weight: 700;
         }
@@ -447,6 +460,12 @@
             background: rgba(200, 67, 50, .13);
             color: var(--stamp);
             border: 1px solid rgba(200, 67, 50, .4);
+        }
+
+        .tag-vacation {
+            background: rgba(31, 157, 85, .14);
+            color: #2a5338;
+            border: 1px solid rgba(31, 157, 85, .45);
         }
 
         .rule {
@@ -909,9 +928,9 @@
                 if (!names.length) return '';
                 var chips = names.map(function (s) {
                     var style;
-                    if (kind === 'second') style = 'background:' + s.style.text + ';color:#fcfaf6';      // 後半は濃く
-                    else if (kind === 'absent') style = '';                                             // 不在は下地なしの黒い太字
-                    else style = 'background:' + s.style.bg + ';color:' + s.style.text;                 // 前半は薄く
+                    if (kind === 'second') style = 'background:' + s.style.text + ';color:#fcfaf6';      // 後半は濃い下地に白文字
+                    else if (kind === 'absent') style = 'background:' + s.style.bg;                     // 不在は薄い下地に黒い太字
+                    else style = 'background:' + s.style.bg + ';color:' + s.style.text;                 // 前半は薄い下地に同色の文字
                     return '<span class="nm ' + kind + '" style="' + style + '">' + esc(s.name) + '</span>';
                 }).join('');
                 return '<div class="cr"><span class="crl">' + label + '</span><span class="names">' + chips + '</span></div>';
@@ -943,7 +962,8 @@
                     else if (dateObj.getTime() < today.getTime()) cls += ' is-past';
                     if (key === state.selected) cls += ' is-sel';
                     if (closed) cls += ' is-closed';
-                    if (data.dayType === 'holiday' || data.dayType === 'longVacation') cls += ' is-holiday';
+                    if (data.dayType === 'holiday') cls += ' is-holiday';
+                    else if (data.dayType === 'longVacation') cls += ' is-vacation';
                     if (dow === 0) cls += ' is-sun';
                     if (dow === 6) cls += ' is-sat';
 
@@ -987,8 +1007,8 @@
                     ? '<span class="tag tag-closed mono">閉塾</span>'
                     : '<span class="tag tag-open mono">開塾</span>';
                 if (isToday) tag = '<span class="tag tag-today mono">今日</span>' + tag;
-                if (data.dayType === 'holiday') tag += ' <span class="tag tag-holiday mono">休講</span>';
-                if (data.dayType === 'longVacation') tag += ' <span class="tag tag-holiday mono">長期休暇</span>';
+                if (data.dayType === 'holiday') tag += ' <span class="tag tag-holiday mono">祝日</span>';
+                if (data.dayType === 'longVacation') tag += ' <span class="tag tag-vacation mono">長期休み</span>';
 
                 var body;
                 if (closed) {
