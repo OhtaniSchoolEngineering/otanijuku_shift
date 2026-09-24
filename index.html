@@ -352,10 +352,11 @@
             font-weight: 700;
         }
 
-        /* 不在は下地なしの薄い文字（前半・後半は下地があるので見分けられる） */
+        /* 不在は下地なしの黒い太字（前半・後半は下地があるので見分けられる） */
         .nm.absent {
             background: transparent !important;
-            color: var(--ink-muted) !important;
+            color: var(--ink) !important;
+            font-weight: 700;
         }
 
         .flat {
@@ -909,7 +910,7 @@
                 var chips = names.map(function (s) {
                     var style;
                     if (kind === 'second') style = 'background:' + s.style.text + ';color:#fcfaf6';      // 後半は濃く
-                    else if (kind === 'absent') style = '';                                             // 不在は取り消し線
+                    else if (kind === 'absent') style = '';                                             // 不在は下地なしの黒い太字
                     else style = 'background:' + s.style.bg + ';color:' + s.style.text;                 // 前半は薄く
                     return '<span class="nm ' + kind + '" style="' + style + '">' + esc(s.name) + '</span>';
                 }).join('');
