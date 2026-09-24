@@ -48,7 +48,11 @@
 
         /* 横にはみ出しても切り落とす。overflow-x:hidden と違い clip は
            スクロール領域を作らないので、曜日見出しの position:sticky が生きる */
-        html, body { max-width: 100%; overflow-x: clip; }
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: clip;
+        }
 
         body {
             background-color: var(--paper-bg);
@@ -62,9 +66,15 @@
             -webkit-text-size-adjust: 100%;
         }
 
-        .mono { font-family: 'IBM Plex Mono', monospace; }
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
 
-        .wrap { max-width: 520px; margin: 0 auto; padding: 0 7px; }
+        .wrap {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 0 7px;
+        }
 
         /* ── ヘッダー ── */
         header {
@@ -73,7 +83,12 @@
             padding-top: env(safe-area-inset-top);
         }
 
-        .head-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; }
+        .head-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 0;
+        }
 
         .logo {
             width: 30px;
@@ -90,9 +105,25 @@
             font-size: 15px;
         }
 
-        .head-title { font-size: 13.5px; font-weight: 700; letter-spacing: .03em; line-height: 1.25; }
-        .head-sub { font-size: 9.5px; letter-spacing: .1em; color: var(--ink-muted); }
-        .head-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+        .head-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            line-height: 1.25;
+        }
+
+        .head-sub {
+            font-size: 9.5px;
+            letter-spacing: .1em;
+            color: var(--ink-muted);
+        }
+
+        .head-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
         .icon-btn {
             width: 30px;
@@ -109,7 +140,9 @@
             flex: none;
         }
 
-        .icon-btn:active { background: var(--paper-note); }
+        .icon-btn:active {
+            background: var(--paper-note);
+        }
 
         .badge-view {
             font-family: 'IBM Plex Mono', monospace;
@@ -133,7 +166,12 @@
             padding-top: 1px;
         }
 
-        .monthbar { display: flex; align-items: center; gap: 7px; margin: 8px 0 5px; }
+        .monthbar {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 8px 0 5px;
+        }
 
         .month-label {
             font-family: 'Shippori Mincho', serif;
@@ -186,8 +224,13 @@
             color: var(--ink-muted);
         }
 
-        .cal-dow span.sun { color: var(--stamp); }
-        .cal-dow span.sat { color: var(--ink-blue); }
+        .cal-dow span.sun {
+            color: var(--stamp);
+        }
+
+        .cal-dow span.sat {
+            color: var(--ink-blue);
+        }
 
         .cal-grid {
             display: grid;
@@ -205,11 +248,27 @@
             cursor: pointer;
         }
 
-        .cell.is-out { background: var(--paper-note); }
-        .cell.is-out .d, .cell.is-out .cb { opacity: .34; }
-        .cell.is-past .cb { opacity: .4; }
-        .cell.is-closed { background: repeating-linear-gradient(135deg, var(--paper-card), var(--paper-card) 5px, rgba(190, 178, 158, .17) 5px, rgba(190, 178, 158, .17) 10px); }
-        .cell.is-sel { box-shadow: inset 0 0 0 2px var(--ink-blue); background-color: #f4f7fb; }
+        .cell.is-out {
+            background: var(--paper-note);
+        }
+
+        .cell.is-out .d,
+        .cell.is-out .cb {
+            opacity: .34;
+        }
+
+        .cell.is-past .cb {
+            opacity: .4;
+        }
+
+        .cell.is-closed {
+            background: repeating-linear-gradient(135deg, var(--paper-card), var(--paper-card) 5px, rgba(190, 178, 158, .17) 5px, rgba(190, 178, 158, .17) 10px);
+        }
+
+        .cell.is-sel {
+            box-shadow: inset 0 0 0 2px var(--ink-blue);
+            background-color: #f4f7fb;
+        }
 
         .d {
             display: block;
@@ -224,8 +283,13 @@
             border-radius: 8px;
         }
 
-        .cell.is-sun .d { color: var(--stamp); }
-        .cell.is-sat .d { color: var(--ink-blue); }
+        .cell.is-sun .d {
+            color: var(--stamp);
+        }
+
+        .cell.is-sat .d {
+            color: var(--ink-blue);
+        }
 
         .cell.is-today .d {
             background: var(--stamp);
@@ -238,14 +302,25 @@
             color: var(--stamp);
         }
 
-        .cell.is-today.is-holiday .d { box-shadow: none; color: var(--paper-card); }
+        .cell.is-today.is-holiday .d {
+            box-shadow: none;
+            color: var(--paper-card);
+        }
 
         /* ── 枡の中身（前半・後半・不在を名字のまま並べる） ──
            文字の大きさは画面幅に比例させ、狭い端末では自動で小さくする。
            入りきらない名前は折り返すので、横にはみ出すことはない。            */
-        .cb { font-size: clamp(7px, 2.25vw, 12px); line-height: 1.45; }
+        .cb {
+            font-size: clamp(7px, 2.25vw, 12px);
+            line-height: 1.45;
+        }
 
-        .cr { display: flex; align-items: flex-start; gap: 1px; margin-top: 1px; }
+        .cr {
+            display: flex;
+            align-items: flex-start;
+            gap: 1px;
+            margin-top: 1px;
+        }
 
         .crl {
             flex: none;
@@ -257,7 +332,13 @@
             line-height: 1.7;
         }
 
-        .names { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; flex: 1; }
+        .names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1px;
+            min-width: 0;
+            flex: 1;
+        }
 
         .nm {
             padding: 0 1px;
@@ -267,7 +348,9 @@
             max-width: 100%;
         }
 
-        .nm.second { font-weight: 700; }
+        .nm.second {
+            font-weight: 700;
+        }
 
         /* 不在は下地なしの薄い文字（前半・後半は下地があるので見分けられる） */
         .nm.absent {
@@ -316,9 +399,17 @@
             padding: 10px 12px 11px;
         }
 
-        .detail.is-closed { border-left-color: var(--line-strong); background: var(--paper-note); }
+        .detail.is-closed {
+            border-left-color: var(--line-strong);
+            background: var(--paper-note);
+        }
 
-        .detail-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .detail-head {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
 
         .detail-date {
             font-family: 'Shippori Mincho', serif;
@@ -336,15 +427,42 @@
             white-space: nowrap;
         }
 
-        .tag-today { background: var(--stamp); color: var(--paper-card); }
-        .tag-open { background: var(--ink); color: var(--paper-card); }
-        .tag-closed { background: var(--line-strong); color: var(--ink-soft); }
-        .tag-holiday { background: rgba(200, 67, 50, .13); color: var(--stamp); border: 1px solid rgba(200, 67, 50, .4); }
+        .tag-today {
+            background: var(--stamp);
+            color: var(--paper-card);
+        }
 
-        .rule { border-top: 1px dashed var(--line-strong); margin: 8px 0 7px; }
+        .tag-open {
+            background: var(--ink);
+            color: var(--paper-card);
+        }
 
-        .grp { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 5px; }
-        .grp:last-child { margin-bottom: 0; }
+        .tag-closed {
+            background: var(--line-strong);
+            color: var(--ink-soft);
+        }
+
+        .tag-holiday {
+            background: rgba(200, 67, 50, .13);
+            color: var(--stamp);
+            border: 1px solid rgba(200, 67, 50, .4);
+        }
+
+        .rule {
+            border-top: 1px dashed var(--line-strong);
+            margin: 8px 0 7px;
+        }
+
+        .grp {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .grp:last-child {
+            margin-bottom: 0;
+        }
 
         .grp-label {
             flex: none;
@@ -355,7 +473,12 @@
             padding-top: 3px;
         }
 
-        .grp-names { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+        .grp-names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-width: 0;
+        }
 
         .chip {
             font-size: 11.5px;
@@ -366,7 +489,11 @@
             white-space: nowrap;
         }
 
-        .none { font-size: 11.5px; color: var(--ink-muted); padding-top: 2px; }
+        .none {
+            font-size: 11.5px;
+            color: var(--ink-muted);
+            padding-top: 2px;
+        }
 
         .note {
             margin-top: 8px;
@@ -451,7 +578,11 @@
             margin-bottom: 14px;
         }
 
-        .gate-text { font-size: 12.5px; line-height: 1.8; color: var(--ink-muted); }
+        .gate-text {
+            font-size: 12.5px;
+            line-height: 1.8;
+            color: var(--ink-muted);
+        }
 
         .btn {
             display: block;
@@ -465,8 +596,17 @@
             cursor: pointer;
         }
 
-        .btn-primary { background: var(--ink-blue); color: #fbf8f1; border-color: #1d3049; }
-        .btn-sub { background: var(--paper-note); color: var(--ink-soft); border-color: var(--line-strong); }
+        .btn-primary {
+            background: var(--ink-blue);
+            color: #fbf8f1;
+            border-color: #1d3049;
+        }
+
+        .btn-sub {
+            background: var(--paper-note);
+            color: var(--ink-soft);
+            border-color: var(--line-strong);
+        }
 
         .gate-error {
             color: var(--stamp);
@@ -487,15 +627,29 @@
             animation: spin .9s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        [hidden] { display: none !important; }
+        [hidden] {
+            display: none !important;
+        }
 
         /* 画面が狭いときは、枡の余白をさらに削って名前の場所を確保する */
         @media (max-width: 380px) {
-            .wrap { padding: 0 4px; }
-            .cell { padding: 3px 0 4px; }
-            .crl { width: .9em; }
+            .wrap {
+                padding: 0 4px;
+            }
+
+            .cell {
+                padding: 3px 0 4px;
+            }
+
+            .crl {
+                width: .9em;
+            }
         }
     </style>
 </head>
