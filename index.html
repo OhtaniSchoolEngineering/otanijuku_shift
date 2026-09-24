@@ -253,10 +253,12 @@
         }
 
         .cell.is-out .d,
+        .cell.is-out .cnote,
         .cell.is-out .cb {
             opacity: .34;
         }
 
+        .cell.is-past .cnote,
         .cell.is-past .cb {
             opacity: .4;
         }
@@ -266,7 +268,7 @@
         /* 半透明だと紙の生成り色と混ざってくすむので、土日と長期休みは不透明の明るい色にする */
         .cell.is-sun { background-color: #ffedeb; }
         .cell.is-sat { background-color: #e8f2ff; }
-        .cell.is-holiday { background-color: rgba(224, 69, 42, .17); }
+        .cell.is-holiday { background-color: #ffedeb; }
         .cell.is-vacation { background-color: #e4f8e9; }
 
         /* 閉塾は斜めストライプ。background-image だけを重ねるので、
@@ -313,6 +315,21 @@
         .cell.is-today .d {
             background: var(--stamp);
             color: var(--paper-card);
+        }
+
+        /* 備考は日付のすぐ下に1行。備考が無い日も同じ高さを取って、
+           どの枡も担当者の行がそろって並ぶようにする（長い備考は…で省略） */
+        .cnote {
+            height: 1.35em;
+            line-height: 1.35;
+            font-size: clamp(6.5px, 2vw, 11px);
+            color: #9c2c19;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 1px;
+            margin-bottom: 1px;
         }
 
         /* ── 枡の中身（前半・後半・不在を名字のまま並べる） ──
@@ -380,17 +397,6 @@
             line-height: 1.5;
             padding-top: 3px;
             text-align: center;
-        }
-
-        .nt {
-            position: absolute;
-            right: 3px;
-            bottom: 3px;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: var(--stamp);
-            opacity: .75;
         }
 
         .hint {
@@ -981,8 +987,8 @@
 
                     html += '<div class="' + cls + '" data-key="' + key + '">' +
                         '<span class="d">' + dateObj.getDate() + '</span>' +
+                        '<div class="cnote" title="' + esc(data.note) + '">' + esc(data.note) + '</div>' +
                         '<div class="cb">' + body + '</div>' +
-                        (data.note ? '<span class="nt"></span>' : '') +
                         '</div>';
                 }
 
