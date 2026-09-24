@@ -269,11 +269,10 @@
 
         .nm.second { font-weight: 700; }
 
+        /* 不在は下地なしの薄い文字（前半・後半は下地があるので見分けられる） */
         .nm.absent {
             background: transparent !important;
             color: var(--ink-muted) !important;
-            text-decoration: line-through;
-            text-decoration-thickness: 1px;
         }
 
         .flat {
@@ -532,7 +531,7 @@
             <div class="cal-grid" id="cal-grid"></div>
         </section>
 
-        <p class="hint mono">前=前半 ／ 後=後半 ／ <span style="text-decoration:line-through">不=不在</span>　・　日付をタップで詳細</p>
+        <p class="hint mono">前=前半 ／ 後=後半 ／ 不=不在　・　日付をタップで詳細</p>
 
         <section class="detail" id="detail"></section>
 
