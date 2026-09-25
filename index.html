@@ -698,7 +698,7 @@
         <div class="wrap head-row">
             <div class="logo">塾</div>
             <div>
-                <div class="head-title">大谷塾 シフト確認＜閲覧のみ＞</div>
+                <div class="head-title">大谷塾 シフト確認</div>
                 <div class="head-sub mono" id="head-sub">OTANI JUKU</div>
             </div>
             <div class="head-right">
@@ -808,14 +808,32 @@
                 return list;
             }
 
+            /**
+             * メンバー名簿の氏名を、カレンダーの担当者名に対応づける。
+             * 名簿の氏名をフルネーム（例「竹中 太郎」）にしても、
+             * 担当者名（例「竹中」）と同じ人として扱えるようにする。
+             */
+            function rosterNameOf(memberName, roster) {
+                var n = normalizeName(memberName);
+                if (!n) return '';
+                roster = roster || [];
+                for (var i = 0; i < roster.length; i++) {
+                    if (roster[i].name === n) return roster[i].name;
+                }
+                for (var j = 0; j < roster.length; j++) {
+                    if (roster[j].name && n.indexOf(roster[j].name) === 0) return roster[j].name;
+                }
+                return n;
+            }
+
             // 旧仕様（担当者IDをキーに保存）のデータを担当者名のキーに読み替える
-            function savedStaffs(saved, members) {
+            function savedStaffs(saved, members, roster) {
                 var m = members || {};
                 var src = (saved && saved.staffs) || {};
                 var out = {};
                 Object.keys(src).forEach(function (key) {
                     var name = key;
-                    if (/^99000[1-6]$/.test(key) && m[key] && m[key].name) name = normalizeName(m[key].name);
+                    if (/^99000[1-6]$/.test(key) && m[key] && m[key].name) name = rosterNameOf(m[key].name, roster);
                     if (out[name] === undefined || key === name) out[name] = src[key];
                 });
                 return out;
@@ -835,7 +853,7 @@
 
             function dayData(shifts, members, key, dateObj, list) {
                 var saved = (shifts || {})[key] || {};
-                var current = savedStaffs(saved, members);
+                var current = savedStaffs(saved, members, list);
                 var defaults = defaultShift(list, dateObj);
                 var staffs = {};
                 list.forEach(function (s) { staffs[s.id] = current[s.id] || defaults[s.id]; });
